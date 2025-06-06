@@ -1,6 +1,16 @@
+let gameInterval; // Declare gameInterval at the top
+let nextPieceType = 'T'; // Start with 'T', will be toggled before first use in playerReset
+
 const canvas = document.getElementById('tetris');
 const context = canvas.getContext('2d');
 context.scale(20, 20);
+
+const colors = [
+    null,       // Index 0: No color for empty cells
+    'purple',   // Index 1: Color for 'T' pieces (value 1 in createPiece)
+    'yellow',   // Index 2: Color for 'O' pieces (value 2 in createPiece)
+    // Future piece colors: 'green', 'blue', 'orange', 'red', 'cyan'
+];
 
 const arena = createMatrix(12, 20);
 const player = {
@@ -36,7 +46,7 @@ function drawMatrix(matrix, offset) {
     matrix.forEach((row, y) => {
         row.forEach((value, x) => {
             if (value !== 0) {
-                context.fillStyle = 'red';
+                context.fillStyle = colors[value]; // Use color based on piece value
                 context.fillRect(x + offset.x, y + offset.y, 1, 1);
             }
         });
@@ -83,6 +93,20 @@ function merge(arena, player) {
         }, clearedRows.length * 50 + 500);
     }
     updateScore();
+    playerReset(); // Spawn a new piece
+}
+
+function playerReset() {
+    nextPieceType = (nextPieceType === 'T') ? 'O' : 'T'; // Toggle for the next piece
+    player.matrix = createPiece(nextPieceType);
+    player.pos.y = 0;
+    player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+
+    if (collide(arena, player)) {
+        // Game Over: If the new piece collides immediately, it means the arena is full at the top.
+        endGame(); // endGame will alert the current score and reload
+        return;     // Stop further execution in playerReset
+    }
 }
 
 function collide(arena, player) {
@@ -165,6 +189,17 @@ function endGame() {
 }
 
 function startGame() {
+    // Reset score for a new game
+    player.score = 0;
+    updateScore();
+
+    // Arena should be clear at the start of a new game.
+    // This ensures that if a game ended and endGame didn't reload, starting a new game is clean.
+    arena.forEach(row => row.fill(0));
+
+    playerReset(); // Set up the first piece
+    draw(); // Draw the initial state
+
     if (gameInterval) {
         clearInterval(gameInterval);
     }
@@ -173,6 +208,7 @@ function startGame() {
         if (collide(arena, player)) {
             player.pos.y--;
             merge(arena, player);
+            // playerReset() is now called within merge()
         } else {
             draw();
         }
