@@ -5,6 +5,13 @@ const canvas = document.getElementById('tetris');
 const context = canvas.getContext('2d');
 context.scale(20, 20);
 
+const colors = [
+    null,       // Index 0: No color for empty cells
+    'purple',   // Index 1: Color for 'T' pieces (value 1 in createPiece)
+    'yellow',   // Index 2: Color for 'O' pieces (value 2 in createPiece)
+    // Future piece colors: 'green', 'blue', 'orange', 'red', 'cyan'
+];
+
 const arena = createMatrix(12, 20);
 const player = {
     pos: {x: 0, y: 0},
@@ -39,7 +46,7 @@ function drawMatrix(matrix, offset) {
     matrix.forEach((row, y) => {
         row.forEach((value, x) => {
             if (value !== 0) {
-                context.fillStyle = 'red';
+                context.fillStyle = colors[value]; // Use color based on piece value
                 context.fillRect(x + offset.x, y + offset.y, 1, 1);
             }
         });
